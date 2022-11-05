@@ -38,7 +38,7 @@ func Register(c *fiber.Ctx) error {
 		return c.JSON(user)
 
 	} else if (email[len(email)-11:len(email)]=="@kiit.ac.in") {
-		user := models.Teacher{
+		user := Models.Teacher{
 			First_name: data["first_name"],
 			Last_name:  data["last_name"],
 			Email:      data["email"],
@@ -65,56 +65,59 @@ func Login(c *fiber.Ctx) error {
 	}
   
   if (data["email"][0] > 0 && strings.Contains((data["email"], "@kiit.ac.in"))){
+
+    var user Models.Student
     
-	rows, err := database.DB.Query("SELECT password FROM Student WHERE email = ?", data["email"]).First(&user)
+	rows, err := database.DB.Query("SELECT * FROM Student WHERE email = ?", data["email"]).First(&user)
     if err!=nil{
       return err
     }
-    
+    if rows==nil{
+      c.Status(fiber.StatusNotFound)
+      return c.JSON(fiber.Map{
+        "message" : "Invalid email"
+      })
+    }
+    password := database.DB.Query("SELECT password FROM Student WHERE password = ?", data["email"]).First(&user)
+
+    err := bcrypt.CompareHashAndPassword([]byte(password), []byte(data["password"]))
+
+    if err!=nil{
+      c.Status(fiber.StatusBadRequest)
+      return c.JSON({
+        "message" : "Invalid password"
+      })
+    }
+
+    claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+      ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
+      Issuer: user.Email
+    })
   }
 
+  token, err := claims.SignString([]byte(SecretKey))
 
+  if err!=nil{
+    c.Status(fiber.StatusInternalServerError)
+    return c.JSON(fiber.Map{
+      "message" : "Could Not Login"
+    })
+  
+    cookie := fiber.Cookie{
+    Name: "jwt",
+    Value: token,
+    Expires: time.Now().Add(time.Hour * 24),
+    HTTPOnly: true,
+    }
 
-	if user.Id == 0 {
-		c.Status(fiber.StatusNotFound)
-		return c.JSON(fiber.Map{
-			"message": "user not found",
-		})
-	}
+  c.Cookie(&cookie)
 
-	if err := bcrypt.CompareHashAndPassword(user.Password, []byte(data["password"])); err != nil {
-		c.Status(fiber.StatusBadRequest)
-		return c.JSON(fiber.Map{
-			"message": "Wrong password",
-		})
-	}
+  return c.JSON(fiber,Map{
+    "message": "Successfully logged in"
+  
+  })
+  }
 
-	claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-		ExpiresAt: time.Now().Add(time.Hour * 24).Unix(),
-		Issuer:    strconv.Itoa(int(user.Id)),
-	})
-
-	token, err := claims.SignedString([]byte(SecretKey))
-
-	if err != nil {
-		c.Status(fiber.StatusInternalServerError)
-		return c.JSON(fiber.Map{
-			"message": "could not login",
-		})
-	}
-
-	cookie := fiber.Cookie{
-		Name:     "jwt",
-		Value:    token,
-		Expires:  time.Now().Add(time.Hour * 24),
-		HTTPOnly: true,
-	}
-
-	c.Cookie(&cookie)
-
-	return c.JSON(fiber.Map{
-		"message": "success",
-	})
 }
 
 func User(c *fiber.Ctx) error {
@@ -133,7 +136,7 @@ func User(c *fiber.Ctx) error {
 
 	claims := token.Claims.(*jwt.StandardClaims)
 
-	var user models.User
+	var user Models.User
 
 	database.DB.Where("id = ?", claims.Issuer).First(&user)
 

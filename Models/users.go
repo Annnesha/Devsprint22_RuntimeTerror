@@ -15,6 +15,7 @@ type Events struct{
   End_date  string
   Start_time  string
   End_time  string
+  Status string
 }
 
 type Teacher struct{

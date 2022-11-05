@@ -2,6 +2,7 @@ package database
 
 import (
   "os"
+  "main/Models"
 
   "github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"  
@@ -23,5 +24,5 @@ func Connect(){
 
   DB = connect
 
-  connect.AutoMigrate(&models.Student{}, &models.Teacher{}, &models.Events{})
+  connect.AutoMigrate(&Models.Student{}, &Models.Teacher{}, &Models.Events{})
 }
