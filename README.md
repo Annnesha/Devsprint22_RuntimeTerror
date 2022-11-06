@@ -1,6 +1,10 @@
 # Devsprint22_RuntimeTerror
 
-Team Name:Runtime Terror
+Team Name: Runtime Terror
+
+Front End: https://github.com/Harshitm14/Devsprint-22_RuntimeTerror_FrontEnd
+
+Ppt: https://docs.google.com/presentation/d/17l-nN-jse0_MZo6_M1ceNiGYw16D3tiz4k1DQfrMJ5c/edit?usp=sharing
 
 Members:
 
