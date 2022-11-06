@@ -1,4 +1,4 @@
-package database
+package Database
 
 import (
   "os"
@@ -24,5 +24,7 @@ func Connect(){
 
   DB = connect
 
-  connect.AutoMigrate(&Models.Student{}, &Models.Teacher{}, &Models.Events{})
+  connect.AutoMigrate(&Models.Student{})
+  connect.AutoMigrate(&Models.Teacher{})
+  connect.AutoMigrate(&Models.Events{})
 }
